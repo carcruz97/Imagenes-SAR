@@ -1,0 +1,19 @@
+---
+title: "generar numeros aleatorios"
+author: "Débora-Carmen -Lautaro"
+date: "26/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+datos_g11=rgamma(100,1,1)
+datos_g23=rgamma(100,2,3)
+img1_ruido=matrix(datos_g11,nrow=10)
+img1_retro=matrix(datos_g23,nrow=10)
+img1=img1_ruido*img1_retro
+img1
+```
+

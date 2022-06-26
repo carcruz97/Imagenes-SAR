@@ -1,0 +1,404 @@
+ed---
+title: "Familiarizate con R"
+author: "Débora"
+date: "15/5/2022"
+output: html_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Paquete dplyr
+
+
+
+**El paquete dplyr proporciona una forma bastante ágil de manejar los ficheros de datos de R. Además, el código escrito usando este paquete (especialmente usando la sintaxis en cadena que veremos más adelante) es mucho más legible y fácil de entender**. 
+
+
+**El paquete incluye un conjunto de comandos que coinciden con las acciones más comunes que se realizan sobre un conjunto de datos (seleccionar filas filter, seleccionar columnas select, ordenar arrange, añadir nuevas variables mutate, resumir mediante alguna medida numérica summarise). Lo que hace que la sintaxis sea especialmente clara es la correspondencia tan nítida entre el comando y la acción. Para llevar a cabo estas acciones debemos tener en cuenta algunas características comunes:**
+
+ - El primer argumento siempre es un data.frame
+ - El resto de argumentos indican lo que queremos hacer con el data.frame.
+ - El resultado siempre tiene también la estructura de data.frame
+
+
+
+```{r pressure,warning=FALSE, cache=FALSE, message=FALSE}
+library(dplyr)
+library(tidyverse)
+library(DT)
+library(kableExtra)
+lirios <- iris[c(1:10,51:60,101:110),]
+lirios
+```
+## Seleccionar filas: filter()
+ Esta acción consiste en seleccionar las observaciones (filas) que cumplen las condiciones que nos interesan.**
+ 
+*Tres ejemplos*
+
+ - el primer comando selecciona todos los lirios de la especie setosa 
+ - el segundo selecciona los lirios de la especie setosa o virginica
+ - el tercero selecciona los de setosa cuya longitud de sépalo es inferior a 5 mm.
+
+```{r}
+
+filter(lirios, Species=='setosa')
+filter(lirios, Species=='setosa' | Species=='virginica')
+filter(lirios, Species=='setosa', Sepal.Length < 5)
+```
+## Seleccionar columnas: select()
+ Esta acción consiste en elegir un subconjunto de las variables (columnas) del fichero. Por ejemplo,
+```{r}
+select(lirios, Sepal.Length, Sepal.Width)
+```
+## Dos ejemplos
+ - Es posible seleccionar un rango de variables utilizando ":" 
+ - o elegir todas las variables menos algunas.
+ - El primer ejemplo selecciona todas entre long de petalo y long de sepalo
+ - El segundo selecciona todas menos especie
+ 
+```{r}
+select(lirios, Petal.Length:Sepal.Length)
+select(lirios, -Species)
+```
+ Otra posibilidad es seleccionar las variables cuyo nombre 
+ contenga ciertos términos:
+```{r}
+ select(lirios, contains('Petal')) 
+
+```
+ 
+# Ordenar: arrange()
+## Ordena las filas de menor a mayor valor de la variable elegida.
+
+**Si escribimos un signo menos, ordena de mayor a menor.** 
+Por ejemplo para ordenar de acuerdo con la longitud del sépalo:
+
+```{r}
+   
+arrange(lirios, Sepal.Length) 
+arrange(lirios, -Sepal.Length)
+arrange(lirios, Species, Sepal.Length)
+```
+# Sintaxis en cadena
+
+El paquete incorpora una sintaxis encadenada que permite escribir las acciones
+en un orden natural, en oposición a la forma anidada en la que lo haríamos 
+normalmente. 
+
+**Primero se escribe el nombre del fichero y luego las acciones**
+
+en el orden en que se realizan separadas por el operador %>%
+(que podríamos leer como entonces). 
+*Por ejemplo, si queremos seleccionar las variables que contienen 
+las medidas del pétalo, seleccionar los lirios para los que la longitud del pétalo
+es mayor que 4 mm y ordenarlos de menor a mayor longitud del pétalo, 
+podemos escribir:*
+
+```{r}
+lirios %>%
+  select(contains('Petal'))  %>%
+  filter(Petal.Length > 4)   %>%
+  arrange(Petal.Length)
+```
+# Añadir nuevas variables: mutate()
+
+Seguimos con las acciones básicas implementadas en el paquete.
+
+**Veamos como crear nuevas variables que son función de las ya existentes.** 
+
+En este ejemplo creamos una variable que corresponde al cociente entre la anchura
+y la longitud del pétalo (que podría corresponder a algún aspecto de la forma del 
+pétalo):
+```{r}
+ lirios %>%
+  mutate(forma = Petal.Width/Petal.Length)
+```
+
+# Resumir (subconjuntos de) variables: group_by() + summarise()
+## Usamos summarise() para aplicar comandos a variables. 
+
+**Normalmente se usa en combinación con group_by() de manera que se calculen 
+ estadísticos para subgrupos de observaciones. **
+ 
+ En el siguiente ejemplo se calcula
+ la media de la longitud del pétalo para los lirios de cada una de las especies: 
+ 
+```{r}
+ lirios %>%
+    group_by(Species) %>%
+    summarise(mean(Petal.Length)) 
+```
+# Para extraer aleatoriamente algunas observaciones sample_n()
+  
+*Extrae 4 obs. sin reemplazamiento*
+```{r}
+lirios %>% sample_n(4)
+ 
+ 
+```
+# Extrae un 25% de obs con reemplazamiento
+```{r}
+
+  lirios %>% sample_frac(0.25, rep=TRUE)  
+```
+# Para visualizar las variables su tipo y algunos valores
+```{r}
+ glimpse(lirios)
+```
+
+```{r}
+summary(lirios)
+```
+```{r}
+str(lirios)
+```
+
+
+
+ Otros resúmenes como desvío standard y cantidad de registros
+=============================================================
+```{r}
+iris %>% 
+  select(Species, Petal.Width, Petal.Length) %>% 
+  group_by(Species) %>% 
+  summarise(total=n(), 
+    mean_petal_width=mean(Petal.Width), 
+    sd_petal_length=sd(Petal.Length)) %>% 
+  arrange(-mean_petal_width)
+```
+<span style="color:blue">Para que muestre algunos registros usamos head()  </span>
+
+
+```{r}
+lirios %>% arrange(desc(Petal.Length)) %>% head()
+
+```
+# Para agregar una nueva fila a la base de datos podemos utilizar add_row():
+
+```{r}
+lirios1 = lirios %>% add_row(Sepal.Length= 7.5, Sepal.Width = 3, Petal.Length=5.7,  Species="virginica")
+lirios1
+```
+Otra característica importante es el conteo, podríamos estar interesados, dado un conjunto de clases cual es su frecuencia absoluta de cada categoría, para esto utilizaremos count() el cual genera una variable que contiene dichas frecuencias.
+
+```{r}
+lirios1 %>% count(Species)
+```
+Ahora eliminamos la fila que tiene un registro faltante
+```{r}
+lirios1 %>% na.omit()
+```
+# Podemos utilizar ifelse() para crear variables según ciertas condiciones:
+
+```{r}
+lirios2<-lirios %>% mutate(categoría = ifelse(Sepal.Width > 3, "Mayor", "Menor"))
+lirios2
+```
+# Para insertar una imagen centrada
+<p align="center">
+ 
+<img src="lirios.PNG" title="Lirios" width="300" height="250">
+<div align="center">Lirios.</div>
+ 
+</p>
+
+# Otra manera de insertar una imagen
+<p align="center">
+![Otra imagen](Crissesorprende.png){width=25%}<div align="center">
+<div align="center">Que Maravilla</div>
+ 
+</p>
+
+# <span style="color:#0174DF"> Podemos tambien renombrar las variables con la función rename(): </span>
+```{r}
+lirios %>% 
+  rename(Especies = Species)
+```
+
+
+
+
+# Podemos seleccionar algunos registros con slice()
+```{r}
+lirios %>% 
+  slice(1, 11, 21)
+```
+# Si quiero cambiar el nombre de todas las columnas setNames()
+```{r}
+lirios3=lirios %>% 
+  setNames(c("Longitud.Sepalo", "Ancho.Sepalo", "Longitud.Petalo","Ancho.Petalo","Especies"))
+lirios3
+```
+```{r}
+dt <- mtcars[1:5, 1:6]
+dt %>%
+  kbl() %>%
+  kable_styling()
+```
+
+```{r}
+dt %>%
+  kbl() %>%
+  kable_paper("hover", 
+              full_width = F)
+```
+```{r}
+dt %>%
+kbl(caption = "Hacemos una Tabla de Mejor Estilo") %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+```{r}
+dt %>%
+  kbl() %>%
+  kable_classic_2(full_width = F)
+```
+
+# Estilo Oscuro
+```{r}
+dt %>%
+  kbl() %>%
+  kable_material_dark()
+```
+**tidyr**
+
+<span style="color:#298A08">gather()</span>
+
+<span style="color:#298A08">spread()</span>
+
+<span style="color:#298A08">separate()</span>
+
+<span style="color:#298A08">unite()</span>
+
+**dplyr**
+
+<span style="color:#DF3A01">select()</span>
+
+<span style="color:#DF3A01">filter()</span>
+
+<span style="color:#DF3A01">group_by()</span>
+
+<span style="color:#DF3A01">summarise()</span>
+
+<span style="color:#DF3A01">arrange()</span>
+
+<span style="color:#DF3A01">join()</span>
+
+<span style="color:#DF3A01">mutate()</span>
+
+
+
+```{r}
+library(lubridate)#manejo de fechas
+library(nycflights13)#archivo de datos de vuelos
+flights %>%
+   select(year, month, day, hour, minute)
+```
+# Armamos una fecha a partir de tres variables
+```{r}
+flights %>%
+  select(year, month, day, hour, minute) %>%
+  mutate(hora_partida = make_datetime(year, month, day,hour)
+  )
+```
+# Fusiona tres columnas: year, month y day en una nueva columna "fecha".
+```{r}
+
+vuelos=unite(flights, "fecha", year, month, day, sep = "-")
+vuelos
+```
+# La función separate() separa en dos columnas  la fecha
+```{r}
+vuelos %>%
+  separate(fecha, into = c("anio", "mes"))
+```
+#nos falta ver spread / gather
+```{r}
+artistsKH <- tibble(first = c("Jimmy", "George", "Mick", "Tom", "Davy", "John", "Paul", "Jimmy", "Joe", "Elvis", "Keith", "Paul", "Ringo", "Joe", "Brian", "Nancy"), last = c("Buffett", "Harrison", "Jagger", "Jones", "Jones", "Lennon", "McCartney", "Page", "Perry", "Presley", "Richards", "Simon", "Starr", "Walsh", "Wilson", "Wilson"), instrument = c("Guitar", "Guitar", "Vocals", "Vocals", "Vocals", "Guitar", "Bass", "Guitar", "Guitar", "Vocals", "Guitar", "Guitar", "Drums", "Guitar", "Vocals", "Vocals"))
+artists <- artistsKH
+artists%>%head()
+
+```
+# Juntamos dos bases utilizando una o dos variables en común con left_join()
+
+```{r}
+
+bandsKH <- tibble(first = c("John", "John Paul", "Jimmy", "Robert", "George", "John", "Paul", "Ringo", "Jimmy", "Mick", "Keith", "Charlie", "Ronnie"), last = c("Bonham", "Jones", "Page", "Plant", "Harrison", "Lennon", "McCartney", "Starr", "Buffett", "Jagger", "Richards", "Watts", "Wood"), band = c("Led Zeppelin", "Led Zeppelin", "Led Zeppelin", "Led Zeppelin", "The Beatles", "The Beatles", "The Beatles", "The Beatles", "The Coral Reefers", "The Rolling Stones", "The Rolling Stones", "The Rolling Stones", "The Rolling Stones"))
+
+# bandsKH == bands - verified in line with what was given
+bands <- bandsKH
+bands %>%head()
+```
+
+
+# **<span style="color:#DF3A01">Qué diferencia hay con right_join() </span>**
+
+
+```{r}
+bands2 <- left_join(bands, artists, by = c("first", "last"))
+bands2 %>%head()
+bands3 <- right_join(artists, bands, by = c("first", "last"))
+bands3 %>%head()
+```
+![Otra imagen](spreadgather.png){width=75%}<div align="center">
+<div align="center">Spread-Gather</div>
+ 
+</p>
+
+
+```{r}
+data_2 <- data.frame(names = c("Pedro", "Carla", "María"), 
+                      W_2014 = c(100, 400, 200), 
+                      W_2015 = c(500, 600, 700),
+                      W_2016 = c(200, 250, 900) )
+
+data_2
+data_3 <- data.frame(names = c("Pedro", "Carla", "María", "Pedro", "Carla", "María", "Pedro", "Carla", "María"),  year = c("2014", "2014", "2014",  "2015", "2015", "2015",  "2016", "2016", "2016"), salario = c(100, 400, 200, 500, 600, 700, 200, 250,900))
+
+data_3
+
+```
+# La funcióm gather() transforma los datos de formato ancho(wide) a formato largo(long)
+
+```{r}
+data_wide <- data_2   #- data_2 está en formato ancho (wide)
+
+data_long <- data_wide %>% gather(periodo, salario, 2:4)
+data_long
+```
+## Si me molesta W_ y lo quiero sacar...puedo!!
+
+```{r}
+data_long <- data_long %>% mutate(periodo = str_replace(periodo, "W_", "" ))
+data_long
+```
+
+## Pasar pasar de long a wide, tidyr tiene la función spread()
+
+```{r}
+data_wide2 <- data_long %>% spread(periodo, salario)
+data_wide2
+
+```
+# Ejercitemos!!
+
+- a) Importar la base IMC infantil.
+
+- b) Seleccionar las filas con pesos superiores a 60kg.
+
+- c) Calcular los promedios de CC por sexo.
+
+- d) Seleccionar las variables Sexo, estatura y CC.
+
+- e) Dentro de esa selección ordenar por CC en orden creciente.
+
+- f) Hacer una tabla bonita con Categoría de Pesos por Sexo.
+
+- g) Armar una nueva variable con nombre IMCnuevo con el cociente entre peso y estatura.
+
+- h) armar una variable que una sexo con categoria de peso y ponerle un nombre.
+
+- i) separar esas columna nueva en dos columnas.

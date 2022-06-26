@@ -1,0 +1,67 @@
+---
+title: "PrimerasImagenesSAR"
+author: "Débora"
+date: "5/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Fijamos el directorio de Trabajo
+
+```{r}
+setwd("C:/Users/Debora/Dropbox/CLD_imSAR/codigo")
+```
+
+
+
+# Invocamos el código guardado en imagematrix
+
+```{r}
+source("imagematrix.R")
+```
+
+
+
+# Definimos una función para generar datos aleatorios con distribución GI0
+
+```{r}
+generoGI.congama<-function(alfa,gama,n,L)
+{
+  XG<-rgamma(n,L,L)
+  YG<-rgamma(n,-alfa,gama)
+  datos<-XG/YG
+  return(datos)
+}
+```
+
+## Generamos una figura de 4 regiones 
+
+```{r}
+
+c1=matrix(generoGI.congama(-2,1,2500,1),nrow=50)
+c2=matrix(generoGI.congama(-4,10,2500,1),nrow=50)
+c3=matrix(generoGI.congama(-6,0.1,2500,1),nrow=50)
+c4=matrix(generoGI.congama(-8,100,2500,1),nrow=50)
+
+im1=cbind(rbind(c1,c2),rbind(c3,c4))
+```
+
+
+# Guardamos las dimensiones de la figura
+
+```{r}
+dimensiones=dim(im1)
+```
+
+
+
+# Abrimos una ventana para genera un gráfico
+
+```{r}
+
+#x11()
+plot(imagematrix(matrix(ecdf(im1)(im1),nrow=nrow(im1))))
+```
+
